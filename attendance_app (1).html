@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Class Attendance & Equipment Log</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F7F6F2; --surface:#FFFFFF; --surface2:#F0EFE9;
+    --border:#E2E0D8; --border2:#CCCAB8; --text:#1A1916; --muted:#7A7868;
+    --accent:#1D4ED8; --accent-bg:#EFF4FF; --accent-border:#BFCFFF;
+    --green:#15803D; --green-bg:#F0FDF4; --green-border:#BBF7D0;
+    --red:#B91C1C; --red-bg:#FEF2F2; --red-border:#FECACA;
+    --amber:#92400E; --amber-bg:#FFFBEB; --amber-border:#FDE68A;
+    --radius:10px; --radius-lg:14px;
+    --mono:'DM Mono',monospace; --sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+  header{background:#111110;color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:200;}
+  .hdr-left{display:flex;align-items:center;gap:10px;}
+  .hdr-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;flex-shrink:0;}
+  .hdr-title{font-size:14px;font-weight:500;}
+  .hdr-sub{font-size:11px;color:#888;font-family:var(--mono);margin-top:1px;}
+  #live-clock{font-family:var(--mono);font-size:13px;color:#888;}
+
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nav-tab{padding:14px 16px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .15s;white-space:nowrap;user-select:none;flex-shrink:0;}
+  .nav-tab:hover{color:var(--text);}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  main{max-width:640px;margin:0 auto;padding:24px 16px 60px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .section-head{margin-bottom:20px;}
+  .section-head h2{font-size:20px;font-weight:600;}
+  .section-head p{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 20px;margin-bottom:20px;}
+  .card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .field:last-of-type{margin-bottom:0;}
+  label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  input,select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:15px;font-family:var(--sans);color:var(--text);outline:none;transition:border-color .15s,background .15s;width:100%;-webkit-appearance:none;appearance:none;}
+  input:focus,select:focus{border-color:var(--accent);background:var(--accent-bg);}
+  input::placeholder{color:#B8B6AE;}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7868' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+
+  .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 20px;font-size:14px;font-weight:500;font-family:var(--sans);border-radius:var(--radius);cursor:pointer;border:1px solid transparent;transition:all .15s;user-select:none;width:100%;-webkit-tap-highlight-color:transparent;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:active{background:#1e3fa0;}
+  .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border2);}
+  .btn-ghost:active{background:var(--surface2);}
+  .btn-green{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+  .btn-red{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+  .btn-sm-edit{padding:5px 11px;font-size:12px;font-weight:500;font-family:var(--sans);background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-radius:6px;cursor:pointer;}
+  .btn-sm-del{padding:5px 11px;font-size:12px;font-weight:500;font-family:var(--sans);background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:6px;cursor:pointer;}
+
+  .alert{border-radius:var(--radius);padding:11px 14px;font-size:13px;margin-top:14px;font-weight:500;display:none;}
+  .alert.success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);display:block;}
+  .alert.error{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:block;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+  .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;margin-bottom:4px;}
+  .stat-val{font-size:26px;font-weight:600;font-family:var(--mono);line-height:1;}
+
+  .record-list{display:flex;flex-direction:column;gap:10px;}
+  .record-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+  .record-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .record-name{font-weight:600;font-size:15px;}
+  .record-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:10px;}
+  .record-kv{display:flex;flex-direction:column;gap:2px;}
+  .rk{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:500;}
+  .rv{font-size:13px;font-family:var(--mono);}
+  .record-actions{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);}
+
+  .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;font-family:var(--mono);}
+  .b-present{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+  .b-out-att{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+  .b-victus{background:#EFF4FF;color:#1E40AF;border:1px solid #BFCFFF;}
+  .b-dell{background:#F5F3FF;color:#5B21B6;border:1px solid #DDD6FE;}
+  .b-eq-out{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+  .b-eq-in{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+
+  .empty-state{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px;background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius-lg);}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px 22px;width:100%;max-width:440px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:20px;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;}
+  .modal-actions .btn{flex:1;}
+
+  .export-row{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+  .divider{border:none;border-top:1px solid var(--border);margin:22px 0;}
+  .section-label{font-size:13px;font-weight:600;margin-bottom:12px;}
+  .section-label span{color:var(--muted);font-weight:400;}
+
+  #tutor-gate{padding:40px 0;text-align:center;}
+  #tutor-gate h3{font-size:18px;font-weight:600;margin-bottom:8px;}
+  #tutor-gate p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+  #tutor-content{display:none;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .two-col .field{margin-bottom:0;}
+  @media(max-width:400px){.two-col{grid-template-columns:1fr;}.stats-row{grid-template-columns:1fr 1fr;}}
+  @media(min-width:480px){.export-row{flex-direction:row;}.export-row .btn{width:auto;flex:1;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-dot"></div>
+    <div>
+      <div class="hdr-title">Web Design & Development</div>
+      <div class="hdr-sub" id="session-date"></div>
+    </div>
+  </div>
+  <div id="live-clock"></div>
+</header>
+
+<div class="nav">
+  <div class="nav-tab active"  onclick="showPage('attendance',this)">Attendance</div>
+  <div class="nav-tab"         onclick="showPage('equipment',this)">Equipment</div>
+  <div class="nav-tab"         onclick="showPage('dashboard',this)">Tutor view</div>
+</div>
+
+<main>
+
+  <!-- ══ ATTENDANCE ══ -->
+  <div id="page-attendance" class="page active">
+    <div class="section-head">
+      <h2>Sign in to class</h2>
+      <p>Open this page on your own phone or laptop. Fill in your details and tap Sign In. Use the sign-out section when you leave.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your details</div>
+      <div class="field"><label>Full name</label><input id="att-name" type="text" placeholder="e.g. Grace Wanjiku" autocomplete="name"></div>
+      <div class="two-col">
+        <div class="field"><label>Student ID</label><input id="att-id" type="text" placeholder="e.g. WD2024-012"></div>
+        <div class="field"><label>Phone number</label><input id="att-phone" type="tel" placeholder="0712 345 678" autocomplete="tel"></div>
+      </div>
+      <button class="btn btn-primary" onclick="signIn()" style="margin-top:6px">Sign in for today's class</button>
+      <div id="att-alert" class="alert"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Sign out (when leaving)</div>
+      <div class="field"><label>Your student ID</label><input id="so-id" type="text" placeholder="Enter your ID number"></div>
+      <button class="btn btn-ghost" onclick="signOut()">Sign out</button>
+      <div id="so-alert" class="alert"></div>
+    </div>
+
+    <hr class="divider">
+    <p class="section-label">Today's sign-ins <span id="att-count"></span></p>
+    <div id="att-list"><div class="empty-state">No sign-ins yet.</div></div>
+  </div>
+
+  <!-- ══ EQUIPMENT ══ -->
+  <div id="page-equipment" class="page">
+    <div class="section-head">
+      <h2>Equipment log</h2>
+      <p>Taking a laptop? Log it here. When you return it, use the return section below.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Take a laptop</div>
+      <div class="two-col">
+        <div class="field"><label>Your full name</label><input id="eq-name" type="text" placeholder="Full name"></div>
+        <div class="field"><label>Student ID</label><input id="eq-id" type="text" placeholder="e.g. WD2024-012"></div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Laptop type</label>
+          <select id="eq-type" onchange="onTypeChange()">
+            <option value="">— Choose —</option>
+            <option value="Victus">HP Victus (+ mouse)</option>
+            <option value="Dell">Dell</option>
+          </select>
+        </div>
+        <div class="field"><label>Laptop number</label><input id="eq-num" type="text" placeholder="e.g. V-03 or D-07"></div>
+      </div>
+      <div class="field" id="mouse-field" style="display:none">
+        <label>Mouse taken?</label>
+        <select id="eq-mouse">
+          <option value="Yes">Yes — mouse taken</option>
+          <option value="No">No — mouse left behind</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="takeEquip()" style="margin-top:6px">Log take-out</button>
+      <div id="eq-alert" class="alert"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Return a laptop</div>
+      <div class="field"><label>Laptop number</label><input id="ret-num" type="text" placeholder="e.g. V-03 or D-07"></div>
+      <button class="btn btn-green" onclick="returnEquip()">Log return</button>
+      <div id="ret-alert" class="alert"></div>
+    </div>
+
+    <hr class="divider">
+    <p class="section-label">Equipment log <span id="eq-count"></span></p>
+    <div id="eq-list"><div class="empty-state">No equipment logged yet.</div></div>
+  </div>
+
+  <!-- ══ TUTOR DASHBOARD ══ -->
+  <div id="page-dashboard" class="page">
+
+    <div id="tutor-gate">
+      <h3>Tutor access</h3>
+      <p>Enter your PIN to manage records and export data.</p>
+      <div class="field" style="max-width:240px;margin:0 auto 16px">
+        <input id="pin-input" type="password" placeholder="PIN" style="text-align:center;font-size:22px;letter-spacing:.25em">
+      </div>
+      <button class="btn btn-primary" style="max-width:240px;margin:0 auto" onclick="checkPin()">Enter</button>
+      <div id="pin-alert" class="alert" style="max-width:240px;margin:12px auto 0"></div>
+      <p style="font-size:12px;color:var(--muted);margin-top:16px">Default PIN: <span style="font-family:var(--mono)">1234</span></p>
+    </div>
+
+    <div id="tutor-content">
+      <div class="section-head">
+        <h2>Tutor dashboard</h2>
+        <p>Live view of attendance and equipment. Edit or remove any entry, then export to Excel.</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-lbl">In class</div><div class="stat-val" style="color:var(--accent)" id="dash-present">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">Signed out</div><div class="stat-val" style="color:var(--amber)" id="dash-left">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">Laptops out</div><div class="stat-val" style="color:var(--green)" id="dash-laptops">0</div></div>
+      </div>
+
+      <div class="export-row">
+        <button class="btn btn-ghost" onclick="exportCSV('attendance')">Export attendance .csv</button>
+        <button class="btn btn-ghost" onclick="exportCSV('equipment')">Export equipment .csv</button>
+      </div>
+
+      <p class="section-label">Attendance records <span id="dash-att-count"></span></p>
+      <div id="dash-att-list" class="record-list" style="margin-bottom:28px"></div>
+
+      <p class="section-label">Equipment records <span id="dash-eq-count"></span></p>
+      <div id="dash-eq-list" class="record-list" style="margin-bottom:32px"></div>
+
+      <button class="btn btn-red" onclick="lockDashboard()">Lock dashboard</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Edit record</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TUTOR_PIN = '1234';
+  let attendance = [];
+  let equipment  = [];
+
+  /* ── Clock & date ── */
+  function tick() {
+    const d = new Date();
+    document.getElementById('live-clock').textContent =
+      String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  }
+  tick(); setInterval(tick,1000);
+  document.getElementById('session-date').textContent =
+    new Date().toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  function nowTime() {
+    const d=new Date();
+    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+  function flash(id,msg,type) {
+    const el=document.getElementById(id);
+    el.textContent=msg; el.className='alert '+type;
+    clearTimeout(el._t); el._t=setTimeout(()=>{el.className='alert';},4000);
+  }
+
+  /* ── Navigation ── */
+  function showPage(name,tab) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    tab.classList.add('active');
+    if(name==='dashboard') refreshDashboard();
+  }
+
+  /* ══ ATTENDANCE ══ */
+  function signIn() {
+    const name  = document.getElementById('att-name').value.trim();
+    const id    = document.getElementById('att-id').value.trim();
+    const phone = document.getElementById('att-phone').value.trim();
+    if(!name||!id||!phone){flash('att-alert','Please fill in all three fields.','error');return;}
+    if(attendance.find(r=>r.id.toLowerCase()===id.toLowerCase())){flash('att-alert','This ID has already signed in today.','error');return;}
+    attendance.push({name,id,phone,timeIn:nowTime(),timeOut:'',status:'present'});
+    ['att-name','att-id','att-phone'].forEach(i=>document.getElementById(i).value='');
+    flash('att-alert',name+' signed in at '+nowTime()+'. Welcome!','success');
+    renderAttendance();
+  }
+
+  function signOut() {
+    const id=document.getElementById('so-id').value.trim();
+    const rec=attendance.find(r=>r.id.toLowerCase()===id.toLowerCase());
+    if(!rec){flash('so-alert','ID not found. Did you sign in first?','error');return;}
+    if(rec.status==='signed-out'){flash('so-alert','You have already signed out.','error');return;}
+    rec.timeOut=nowTime(); rec.status='signed-out';
+    document.getElementById('so-id').value='';
+    flash('so-alert',rec.name+' signed out at '+rec.timeOut+'. See you next time!','success');
+    renderAttendance();
+  }
+
+  function renderAttendance() {
+    const present=attendance.filter(r=>r.status==='present').length;
+    document.getElementById('att-count').textContent='('+present+' currently in)';
+    const el=document.getElementById('att-list');
+    if(!attendance.length){el.innerHTML='<div class="empty-state">No sign-ins yet.</div>';return;}
+    el.innerHTML=attendance.map((r,i)=>`
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name}</span>
+          <span class="badge ${r.status==='present'?'b-present':'b-out-att'}">${r.status==='present'?'Present':'Out'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Phone</span><span class="rv">${r.phone}</span></div>
+          <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut||'—'}</span></div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ══ EQUIPMENT ══ */
+  function onTypeChange() {
+    const t=document.getElementById('eq-type').value;
+    document.getElementById('mouse-field').style.display=t==='Victus'?'flex':'none';
+  }
+
+  function takeEquip() {
+    const name  = document.getElementById('eq-name').value.trim();
+    const id    = document.getElementById('eq-id').value.trim();
+    const type  = document.getElementById('eq-type').value;
+    const num   = document.getElementById('eq-num').value.trim();
+    const mouse = type==='Victus'?document.getElementById('eq-mouse').value:'N/A';
+    if(!name||!id||!type||!num){flash('eq-alert','Please fill in all fields and choose a laptop type.','error');return;}
+    if(equipment.find(r=>r.num.toLowerCase()===num.toLowerCase()&&r.status==='out')){
+      flash('eq-alert','Laptop '+num+' is already signed out by someone else.','error');return;
+    }
+    equipment.push({name,id,type,num,mouse,timeOut:nowTime(),timeIn:'',status:'out'});
+    ['eq-name','eq-id','eq-num'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('eq-type').value='';
+    document.getElementById('mouse-field').style.display='none';
+    flash('eq-alert','Laptop '+num+' logged to '+name+'.','success');
+    renderEquipment();
+  }
+
+  function returnEquip() {
+    const num=document.getElementById('ret-num').value.trim();
+    const rec=equipment.find(r=>r.num.toLowerCase()===num.toLowerCase()&&r.status==='out');
+    if(!rec){flash('ret-alert','Laptop '+num+' not found or already returned.','error');return;}
+    rec.timeIn=nowTime(); rec.status='returned';
+    document.getElementById('ret-num').value='';
+    flash('ret-alert','Laptop '+rec.num+' returned at '+rec.timeIn+'. Thank you!','success');
+    renderEquipment();
+  }
+
+  function renderEquipment() {
+    const out=equipment.filter(r=>r.status==='out').length;
+    document.getElementById('eq-count').textContent='('+out+' currently out)';
+    const el=document.getElementById('eq-list');
+    if(!equipment.length){el.innerHTML='<div class="empty-state">No equipment logged yet.</div>';return;}
+    el.innerHTML=equipment.map((r,i)=>`
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name}</span>
+          <span class="badge ${r.status==='out'?'b-eq-out':'b-eq-in'}">${r.status==='out'?'Out':'Returned'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">Student ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Laptop</span><span class="rv"><span class="badge ${r.type==='Victus'?'b-victus':'b-dell'}" style="font-size:10px;padding:2px 6px">${r.type}</span> ${r.num}</span></div>
+          <div class="record-kv"><span class="rk">Mouse</span><span class="rv">${r.mouse}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut}</span></div>
+          ${r.timeIn?`<div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>`:''}
+        </div>
+      </div>`).join('');
+  }
+
+  /* ══ TUTOR PIN ══ */
+  function checkPin() {
+    if(document.getElementById('pin-input').value===TUTOR_PIN) {
+      document.getElementById('tutor-gate').style.display='none';
+      document.getElementById('tutor-content').style.display='block';
+      refreshDashboard();
+    } else {
+      flash('pin-alert','Incorrect PIN. Try again.','error');
+      document.getElementById('pin-input').value='';
+    }
+  }
+  document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin();});
+
+  function lockDashboard() {
+    document.getElementById('tutor-gate').style.display='';
+    document.getElementById('tutor-content').style.display='none';
+    document.getElementById('pin-input').value='';
+  }
+
+  /* ══ DASHBOARD ══ */
+  function refreshDashboard() {
+    document.getElementById('dash-present').textContent=attendance.filter(r=>r.status==='present').length;
+    document.getElementById('dash-left').textContent=attendance.filter(r=>r.status==='signed-out').length;
+    document.getElementById('dash-laptops').textContent=equipment.filter(r=>r.status==='out').length;
+
+    const attCount=document.getElementById('dash-att-count');
+    attCount.textContent='('+attendance.length+' total)';
+    const attEl=document.getElementById('dash-att-list');
+    if(!attendance.length){attEl.innerHTML='<div class="empty-state">No attendance records yet.</div>';}
+    else attEl.innerHTML=attendance.map((r,i)=>`
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name}</span>
+          <span class="badge ${r.status==='present'?'b-present':'b-out-att'}">${r.status==='present'?'Present':'Signed out'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Phone</span><span class="rv">${r.phone}</span></div>
+          <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut||'—'}</span></div>
+        </div>
+        <div class="record-actions">
+          <button class="btn-sm-edit" onclick="openEditAtt(${i})">Edit</button>
+          <button class="btn-sm-del"  onclick="removeAtt(${i})">Remove</button>
+        </div>
+      </div>`).join('');
+
+    const eqCount=document.getElementById('dash-eq-count');
+    eqCount.textContent='('+equipment.length+' total)';
+    const eqEl=document.getElementById('dash-eq-list');
+    if(!equipment.length){eqEl.innerHTML='<div class="empty-state">No equipment records yet.</div>';}
+    else eqEl.innerHTML=equipment.map((r,i)=>`
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name} &mdash; <span style="font-family:var(--mono);font-size:13px">${r.num}</span></span>
+          <span class="badge ${r.status==='out'?'b-eq-out':'b-eq-in'}">${r.status==='out'?'Out':'Returned'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">Student ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Type</span><span class="rv"><span class="badge ${r.type==='Victus'?'b-victus':'b-dell'}" style="font-size:10px;padding:2px 6px">${r.type}</span></span></div>
+          <div class="record-kv"><span class="rk">Mouse</span><span class="rv">${r.mouse}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut}</span></div>
+          <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn||'—'}</span></div>
+        </div>
+        <div class="record-actions">
+          <button class="btn-sm-edit" onclick="openEditEq(${i})">Edit</button>
+          <button class="btn-sm-del"  onclick="removeEq(${i})">Remove</button>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ══ EDIT MODAL ══ */
+  function openModal(title,bodyHTML,saveFn) {
+    document.getElementById('modal-title').textContent=title;
+    document.getElementById('modal-body').innerHTML=bodyHTML;
+    document.getElementById('modal-save-btn').onclick=saveFn;
+    document.getElementById('edit-modal').classList.add('open');
+  }
+  function closeModal(){document.getElementById('edit-modal').classList.remove('open');}
+  document.getElementById('edit-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+  function openEditAtt(i) {
+    const r=attendance[i];
+    openModal('Edit attendance record',`
+      <div class="field"><label>Full name</label><input id="m-name" value="${r.name}"></div>
+      <div class="two-col">
+        <div class="field"><label>Student ID</label><input id="m-id" value="${r.id}"></div>
+        <div class="field"><label>Phone</label><input id="m-phone" value="${r.phone}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Time in</label><input id="m-tin" value="${r.timeIn}" placeholder="HH:MM"></div>
+        <div class="field"><label>Time out</label><input id="m-tout" value="${r.timeOut}" placeholder="HH:MM or leave blank"></div>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="m-status">
+          <option value="present"    ${r.status==='present'   ?'selected':''}>Present</option>
+          <option value="signed-out" ${r.status==='signed-out'?'selected':''}>Signed out</option>
+        </select>
+      </div>`,()=>{
+        attendance[i]={
+          name:   document.getElementById('m-name').value.trim()||r.name,
+          id:     document.getElementById('m-id').value.trim()||r.id,
+          phone:  document.getElementById('m-phone').value.trim()||r.phone,
+          timeIn: document.getElementById('m-tin').value.trim()||r.timeIn,
+          timeOut:document.getElementById('m-tout').value.trim(),
+          status: document.getElementById('m-status').value,
+        };
+        closeModal(); renderAttendance(); refreshDashboard();
+    });
+  }
+
+  function removeAtt(i) {
+    if(!confirm('Remove '+attendance[i].name+' from attendance? This cannot be undone.'))return;
+    attendance.splice(i,1); renderAttendance(); refreshDashboard();
+  }
+
+  function openEditEq(i) {
+    const r=equipment[i];
+    openModal('Edit equipment record',`
+      <div class="field"><label>Name</label><input id="m-name" value="${r.name}"></div>
+      <div class="two-col">
+        <div class="field"><label>Student ID</label><input id="m-id" value="${r.id}"></div>
+        <div class="field"><label>Laptop number</label><input id="m-num" value="${r.num}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Laptop type</label>
+          <select id="m-type">
+            <option value="Victus" ${r.type==='Victus'?'selected':''}>HP Victus</option>
+            <option value="Dell"   ${r.type==='Dell'  ?'selected':''}>Dell</option>
+          </select>
+        </div>
+        <div class="field"><label>Mouse</label>
+          <select id="m-mouse">
+            <option value="Yes" ${r.mouse==='Yes'?'selected':''}>Yes</option>
+            <option value="No"  ${r.mouse==='No' ?'selected':''}>No</option>
+            <option value="N/A" ${r.mouse==='N/A'?'selected':''}>N/A</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Time out</label><input id="m-tout" value="${r.timeOut}"></div>
+        <div class="field"><label>Time in</label><input id="m-tin" value="${r.timeIn}" placeholder="blank if still out"></div>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="m-status">
+          <option value="out"      ${r.status==='out'     ?'selected':''}>Out</option>
+          <option value="returned" ${r.status==='returned'?'selected':''}>Returned</option>
+        </select>
+      </div>`,()=>{
+        equipment[i]={
+          name:   document.getElementById('m-name').value.trim()||r.name,
+          id:     document.getElementById('m-id').value.trim()||r.id,
+          num:    document.getElementById('m-num').value.trim()||r.num,
+          type:   document.getElementById('m-type').value,
+          mouse:  document.getElementById('m-mouse').value,
+          timeOut:document.getElementById('m-tout').value.trim()||r.timeOut,
+          timeIn: document.getElementById('m-tin').value.trim(),
+          status: document.getElementById('m-status').value,
+        };
+        closeModal(); renderEquipment(); refreshDashboard();
+    });
+  }
+
+  function removeEq(i) {
+    if(!confirm('Remove laptop '+equipment[i].num+' record? This cannot be undone.'))return;
+    equipment.splice(i,1); renderEquipment(); refreshDashboard();
+  }
+
+  /* ══ EXPORT CSV ══ */
+  function exportCSV(type) {
+    const date=new Date().toISOString().slice(0,10);
+    let csv,filename;
+    if(type==='attendance') {
+      if(!attendance.length){alert('No attendance records to export yet.');return;}
+      csv='Name,Student ID,Phone,Time In,Time Out,Status\n';
+      attendance.forEach(r=>{csv+=`"${r.name}","${r.id}","${r.phone}","${r.timeIn}","${r.timeOut||''}","${r.status}"\n`;});
+      filename='attendance_'+date+'.csv';
+    } else {
+      if(!equipment.length){alert('No equipment records to export yet.');return;}
+      csv='Name,Student ID,Laptop Type,Laptop Number,Mouse,Time Out,Time In,Status\n';
+      equipment.forEach(r=>{csv+=`"${r.name}","${r.id}","${r.type}","${r.num}","${r.mouse}","${r.timeOut}","${r.timeIn||''}","${r.status}"\n`;});
+      filename='equipment_'+date+'.csv';
+    }
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  }
+</script>
+</body>
+</html>
