@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FCA Finland – Digital Skills Training</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --surface2: #EEF1F7;
+  --border: #DDE2EC;
+  --border2: #C4CCE0;
+  --text: #111827;
+  --muted: #6B7280;
+  --fca-blue: #1B3D8F;
+  --fca-blue-dark: #122A6B;
+  --fca-blue-light: #E8EDFB;
+  --fca-blue-mid: #C7D3F4;
+  --green: #166534;
+  --green-bg: #F0FDF4;
+  --green-border: #86EFAC;
+  --red: #991B1B;
+  --red-bg: #FEF2F2;
+  --red-border: #FECACA;
+  --amber: #78350F;
+  --amber-bg: #FFFBEB;
+  --amber-border: #FCD34D;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--fca-blue);
+  color: #fff;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  box-shadow: 0 2px 12px rgba(27,61,143,.35);
+}
+.hdr-left { display: flex; align-items: center; gap: 14px; }
+.hdr-logo {
+  width: 38px; height: 38px;
+  background: #fff;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.hdr-logo img { width: 100%; height: 100%; object-fit: contain; display: none; }
+.hdr-logo-text {
+  font-size: 11px; font-weight: 700;
+  color: var(--fca-blue);
+  line-height: 1.1;
+  text-align: center;
+  padding: 4px;
+}
+.hdr-titles { display: flex; flex-direction: column; gap: 1px; }
+.hdr-org { font-size: 11px; color: rgba(255,255,255,.65); font-weight: 400; letter-spacing: .02em; }
+.hdr-title { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+#live-clock { font-family: var(--mono); font-size: 14px; color: rgba(255,255,255,.9); }
+#session-date { font-size: 11px; color: rgba(255,255,255,.6); }
+
+/* ── NAV ── */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 14px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  transition: all .15s;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--fca-blue); border-bottom-color: var(--fca-blue); }
+.nav-tab .tab-icon { font-size: 15px; }
+
+/* ── MAIN ── */
+main { max-width: 680px; margin: 0 auto; padding: 24px 16px 80px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── SECTION HEAD ── */
+.section-head { margin-bottom: 22px; }
+.section-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.section-head p { font-size: 13px; color: var(--muted); margin-top: 5px; line-height: 1.6; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── FIELDS ── */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 13px; }
+.field:last-of-type { margin-bottom: 0; }
+label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+input, select, textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--fca-blue);
+  background: var(--fca-blue-light);
+  box-shadow: 0 0 0 3px rgba(27,61,143,.1);
+}
+input::placeholder { color: #B0B8CC; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 12px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.two-col .field { margin-bottom: 0; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 7px; padding: 13px 20px;
+  font-size: 14px; font-weight: 600; font-family: var(--sans);
+  border-radius: var(--radius);
+  cursor: pointer; border: 1px solid transparent;
+  transition: all .15s; user-select: none; width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -.01em;
+}
+.btn-primary { background: var(--fca-blue); color: #fff; border-color: var(--fca-blue); }
+.btn-primary:active, .btn-primary:hover { background: var(--fca-blue-dark); }
+.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border2); }
+.btn-ghost:active, .btn-ghost:hover { background: var(--surface2); }
+.btn-green { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+.btn-red { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+.btn-amber { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+.btn-sm { padding: 6px 12px; font-size: 12px; font-weight: 500; font-family: var(--sans); border-radius: 6px; cursor: pointer; border: 1px solid; }
+.btn-sm-edit { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+.btn-sm-del { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+.btn-sm-view { background: var(--fca-blue-light); color: var(--fca-blue); border-color: var(--fca-blue-mid); }
+
+/* ── ALERT ── */
+.alert {
+  border-radius: var(--radius); padding: 11px 14px; font-size: 13px;
+  margin-top: 13px; font-weight: 500; display: none; line-height: 1.4;
+}
+.alert.success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); display: flex; gap: 7px; align-items: flex-start; }
+.alert.error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); display: flex; gap: 7px; align-items: flex-start; }
+
+/* ── SIGNATURE PAD ── */
+.sig-wrap {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.sig-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 160px;
+  touch-action: none;
+}
+.sig-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  color: #C4CCE0;
+  font-size: 13px;
+  font-style: italic;
+  transition: opacity .2s;
+}
+.sig-placeholder.hidden { opacity: 0; }
+.sig-tools {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 10px; flex-wrap: wrap;
+}
+.sig-tool-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+  transition: transform .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.color-swatch.active { border-color: var(--fca-blue); transform: scale(1.15); }
+.sig-clear-btn {
+  margin-left: auto;
+  padding: 5px 12px; font-size: 12px; font-weight: 500;
+  font-family: var(--sans); background: var(--red-bg);
+  color: var(--red); border: 1px solid var(--red-border);
+  border-radius: 6px; cursor: pointer;
+}
+.sig-status {
+  font-size: 11px; color: var(--muted); margin-top: 5px;
+  font-family: var(--mono); display: flex; align-items: center; gap: 5px;
+}
+.sig-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.sig-dot.signed { background: var(--green); }
+
+/* ── STATS ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 13px 14px; }
+.stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+.stat-val { font-size: 26px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+
+/* ── RECORD LIST ── */
+.record-list { display: flex; flex-direction: column; gap: 10px; }
+.record-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+}
+.record-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+.record-name { font-weight: 600; font-size: 15px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin-bottom: 10px; }
+.record-kv { display: flex; flex-direction: column; gap: 2px; }
+.rk { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.rv { font-size: 13px; font-family: var(--mono); word-break: break-all; }
+.record-actions { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+/* ── SIGNATURE PREVIEW ── */
+.sig-preview-wrap { margin-top: 8px; }
+.sig-preview-thumb {
+  max-height: 50px; border: 1px solid var(--border);
+  border-radius: 6px; display: block; background: #fff;
+}
+
+/* ── BADGE ── */
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; font-family: var(--mono); flex-shrink: 0; }
+.b-present { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.b-out-att { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.b-victus { background: #EFF4FF; color: #1E40AF; border: 1px solid #BFCFFF; }
+.b-dell { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+.b-eq-out { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.b-eq-in { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 14px; background: var(--surface); border: 1px dashed var(--border2); border-radius: var(--radius-lg); line-height: 1.5; }
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+.section-label { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-label span { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+/* ── MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); padding: 24px 22px; width: 100%; max-width: 460px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; letter-spacing: -.02em; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions .btn { flex: 1; }
+
+/* ── SIG MODAL ── */
+.sig-modal-img { max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; margin: 12px 0; }
+
+/* ── TUTOR GATE ── */
+#tutor-gate { padding: 48px 0; text-align: center; }
+#tutor-gate h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.02em; }
+#tutor-gate p { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+#tutor-content { display: none; }
+
+/* ── EXPORT SECTION ── */
+.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.export-card {
+  background: var(--fca-blue-light); border: 1px solid var(--fca-blue-mid);
+  border-radius: var(--radius-lg); padding: 16px; cursor: pointer;
+  transition: background .15s;
+}
+.export-card:hover { background: #d8e3f9; }
+.export-card-icon { font-size: 24px; margin-bottom: 8px; }
+.export-card-label { font-size: 13px; font-weight: 600; color: var(--fca-blue); }
+.export-card-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ── LOGO UPLOAD ── */
+.logo-upload-area {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.logo-upload-area:hover { border-color: var(--fca-blue); background: var(--fca-blue-light); }
+.logo-upload-area input { display: none; }
+.logo-preview-wrap { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.logo-preview-img { max-height: 60px; max-width: 120px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; }
+
+/* ── INFO BOX ── */
+.info-box { background: var(--fca-blue-light); border: 1px solid var(--fca-blue-mid); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--fca-blue); margin-bottom: 16px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr; }
+  .export-grid { grid-template-columns: 1fr; }
+  main { padding: 18px 12px 80px; }
+}
+@media (max-width: 360px) {
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-logo" id="hdr-logo-wrap">
+      <img id="hdr-logo-img" src="" alt="FCA Logo">
+      <div class="hdr-logo-text" id="hdr-logo-fallback">FCA<br>FIN</div>
+    </div>
+    <div class="hdr-titles">
+      <div class="hdr-org">Finland Church Aid (FCA)</div>
+      <div class="hdr-title">Digital Skills Training</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div id="live-clock"></div>
+    <div id="session-date"></div>
+  </div>
+</header>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="showPage('register',this)"><span class="tab-icon">✍️</span> Register</div>
+  <div class="nav-tab" onclick="showPage('equipment',this)"><span class="tab-icon">💻</span> Equipment</div>
+  <div class="nav-tab" onclick="showPage('dashboard',this)"><span class="tab-icon">📋</span> Admin</div>
+</div>
+
+<main>
+
+  <!-- ══ REGISTER / ATTENDANCE ══ -->
+  <div id="page-register" class="page active">
+    <div class="section-head">
+      <h2>Participant registration</h2>
+      <p>Fill in your details and sign below to register for today's training session.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 Your details</div>
+      <div class="field">
+        <label>Full name</label>
+        <input id="att-name" type="text" placeholder="e.g. Grace Wanjiku" autocomplete="name">
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Participant ID</label>
+          <input id="att-id" type="text" placeholder="e.g. DST-2024-012">
+        </div>
+        <div class="field">
+          <label>Phone number</label>
+          <input id="att-phone" type="tel" placeholder="0712 345 678" autocomplete="tel">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <input id="att-email" type="email" placeholder="grace@example.com" autocomplete="email">
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Organisation</label>
+          <input id="att-org" type="text" placeholder="Organisation / School / Self">
+        </div>
+        <div class="field">
+          <label>County / Location</label>
+          <input id="att-county" type="text" placeholder="e.g. Nairobi">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✍️ Signature</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Sign in the box below using your mouse, finger, or stylus. This will be saved with your registration.</p>
+
+      <div class="sig-wrap">
+        <canvas id="sig-canvas"></canvas>
+        <div class="sig-placeholder" id="sig-placeholder">Sign here</div>
+      </div>
+
+      <div class="sig-tools">
+        <span class="sig-tool-label">Pen</span>
+        <div class="color-swatch active" style="background:#111827" data-color="#111827" onclick="setPenColor(this)" title="Black"></div>
+        <div class="color-swatch" style="background:#1B3D8F" data-color="#1B3D8F" onclick="setPenColor(this)" title="Blue"></div>
+        <div class="color-swatch" style="background:#991B1B" data-color="#991B1B" onclick="setPenColor(this)" title="Red"></div>
+        <div class="color-swatch" style="background:#166534" data-color="#166534" onclick="setPenColor(this)" title="Green"></div>
+        <button class="sig-clear-btn" onclick="clearSig()">Clear</button>
+      </div>
+      <div class="sig-status">
+        <div class="sig-dot" id="sig-dot"></div>
+        <span id="sig-status-text">No signature yet</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="registerParticipant()" style="margin-bottom:14px">
+      ✅ Complete registration
+    </button>
+    <div id="att-alert" class="alert"></div>
+
+    <div class="card">
+      <div class="card-title">🚪 Sign out (when leaving early)</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Your Participant ID</label>
+          <input id="so-id" type="text" placeholder="Enter your ID">
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:0px">
+          <button class="btn btn-ghost" onclick="signOut()" style="height:44px">Sign out</button>
+        </div>
+      </div>
+      <div id="so-alert" class="alert"></div>
+    </div>
+
+    <hr class="divider">
+    <p class="section-label">Today's registrations <span id="att-count">(0)</span></p>
+    <div id="att-list"><div class="empty-state"><div class="empty-icon">📝</div>No registrations yet. Fill in the form above.</div></div>
+  </div>
+
+  <!-- ══ EQUIPMENT ══ -->
+  <div id="page-equipment" class="page">
+    <div class="section-head">
+      <h2>Equipment log</h2>
+      <p>Borrow a laptop? Log it here. Return it by entering the laptop number below.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💻 Borrow a laptop</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Your full name</label>
+          <input id="eq-name" type="text" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Participant ID</label>
+          <input id="eq-id" type="text" placeholder="e.g. DST-2024-012">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Laptop type</label>
+          <select id="eq-type" onchange="onTypeChange()">
+            <option value="">— Choose type —</option>
+            <option value="Victus">HP Victus (+ mouse)</option>
+            <option value="Dell">Dell</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Laptop number</label>
+          <input id="eq-num" type="text" placeholder="e.g. V-03 or D-07">
+        </div>
+      </div>
+      <div class="field" id="mouse-field" style="display:none">
+        <label>Mouse taken?</label>
+        <select id="eq-mouse">
+          <option value="Yes">Yes — mouse taken</option>
+          <option value="No">No — mouse left behind</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="takeEquip()" style="margin-top:6px">Log take-out</button>
+      <div id="eq-alert" class="alert"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">↩️ Return a laptop</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Laptop number</label>
+          <input id="ret-num" type="text" placeholder="e.g. V-03">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-green" onclick="returnEquip()" style="height:44px">Log return</button>
+        </div>
+      </div>
+      <div id="ret-alert" class="alert"></div>
+    </div>
+
+    <hr class="divider">
+    <p class="section-label">Equipment log <span id="eq-count">(0 out)</span></p>
+    <div id="eq-list"><div class="empty-state"><div class="empty-icon">💻</div>No equipment logged yet.</div></div>
+  </div>
+
+  <!-- ══ ADMIN DASHBOARD ══ -->
+  <div id="page-dashboard" class="page">
+
+    <div id="tutor-gate">
+      <h3>Admin access</h3>
+      <p>Enter your PIN to manage records, upload a logo, and export to Excel.</p>
+      <div class="field" style="max-width:220px;margin:0 auto 16px">
+        <input id="pin-input" type="password" placeholder="Enter PIN" style="text-align:center;font-size:20px;letter-spacing:.3em">
+      </div>
+      <button class="btn btn-primary" style="max-width:220px;margin:0 auto" onclick="checkPin()">Enter</button>
+      <div id="pin-alert" class="alert" style="max-width:220px;margin:12px auto 0"></div>
+      <p style="font-size:12px;color:var(--muted);margin-top:18px">Default PIN: <span style="font-family:var(--mono)">1234</span></p>
+    </div>
+
+    <div id="tutor-content">
+      <div class="section-head">
+        <h2>Admin dashboard</h2>
+        <p>View all registrations, manage equipment records, and export formatted Excel files with signatures.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-lbl">Registered</div><div class="stat-val" style="color:var(--fca-blue)" id="dash-total">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">In session</div><div class="stat-val" style="color:var(--green)" id="dash-present">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">Signed out</div><div class="stat-val" style="color:var(--amber)" id="dash-left">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">Laptops out</div><div class="stat-val" style="color:var(--red)" id="dash-laptops">0</div></div>
+      </div>
+
+      <!-- Training info setup -->
+      <div class="card">
+        <div class="card-title">⚙️ Training session info</div>
+        <div class="info-box">ℹ️ This information appears in the header of all exported Excel files.</div>
+        <div class="two-col">
+          <div class="field">
+            <label>Training title</label>
+            <input id="cfg-title" type="text" value="Digital Skills Training" placeholder="Training name">
+          </div>
+          <div class="field">
+            <label>Location / Venue</label>
+            <input id="cfg-location" type="text" placeholder="e.g. Nairobi County Hub">
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Facilitator name</label>
+            <input id="cfg-facilitator" type="text" placeholder="e.g. John Kamau">
+          </div>
+          <div class="field">
+            <label>Session / Cohort</label>
+            <input id="cfg-session" type="text" placeholder="e.g. Cohort 3 – Week 2">
+          </div>
+        </div>
+
+        <!-- Logo upload -->
+        <div class="field" style="margin-top:6px">
+          <label>Organisation logo</label>
+          <div class="logo-upload-area" onclick="document.getElementById('logo-file-input').click()">
+            <input type="file" id="logo-file-input" accept="image/*" onchange="handleLogoUpload(event)">
+            <div id="logo-upload-placeholder">
+              <div style="font-size:28px;margin-bottom:6px">🖼️</div>
+              <div style="font-size:13px;color:var(--muted)">Click to upload FCA Finland logo</div>
+              <div style="font-size:11px;color:var(--border2);margin-top:3px">PNG, JPG, or SVG — will appear in Excel exports</div>
+            </div>
+            <div id="logo-preview-area" class="logo-preview-wrap" style="display:none;justify-content:center">
+              <img id="logo-preview-img" class="logo-preview-img" src="" alt="Logo preview">
+              <div style="font-size:13px;color:var(--green);font-weight:500">✓ Logo loaded</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="saveCfg()" style="margin-top:12px">Save settings</button>
+        <div id="cfg-alert" class="alert"></div>
+      </div>
+
+      <!-- Exports -->
+      <p class="section-label">Export to Excel</p>
+      <div class="export-grid">
+        <div class="export-card" onclick="exportAttendanceXLSX()">
+          <div class="export-card-icon">📋</div>
+          <div class="export-card-label">Attendance register</div>
+          <div class="export-card-sub">With signatures · Today's date</div>
+        </div>
+        <div class="export-card" onclick="exportEquipmentXLSX()">
+          <div class="export-card-icon">💻</div>
+          <div class="export-card-label">Equipment log</div>
+          <div class="export-card-sub">All laptop records</div>
+        </div>
+        <div class="export-card" onclick="exportCombinedXLSX()">
+          <div class="export-card-icon">📦</div>
+          <div class="export-card-label">Combined workbook</div>
+          <div class="export-card-sub">Attendance + Equipment in one file</div>
+        </div>
+        <div class="export-card" onclick="exportMasterXLSX()">
+          <div class="export-card-icon">📚</div>
+          <div class="export-card-label">Master register</div>
+          <div class="export-card-sub">All sessions accumulated</div>
+        </div>
+      </div>
+      <div id="export-alert" class="alert" style="margin-top:-10px;margin-bottom:18px"></div>
+
+      <!-- Attendance records -->
+      <p class="section-label">Registered participants <span id="dash-att-count">(0)</span></p>
+      <div id="dash-att-list" class="record-list" style="margin-bottom:28px">
+        <div class="empty-state"><div class="empty-icon">📝</div>No registrations yet.</div>
+      </div>
+
+      <!-- Equipment records -->
+      <p class="section-label">Equipment records <span id="dash-eq-count">(0)</span></p>
+      <div id="dash-eq-list" class="record-list" style="margin-bottom:32px">
+        <div class="empty-state"><div class="empty-icon">💻</div>No equipment records yet.</div>
+      </div>
+
+      <button class="btn btn-red" onclick="lockDashboard()">🔒 Lock admin panel</button>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ── EDIT MODAL ── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Edit record</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIG VIEW MODAL ── -->
+<div class="modal-overlay" id="sig-modal">
+  <div class="modal">
+    <div class="modal-title">Participant signature</div>
+    <div id="sig-modal-name" style="font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+    <img id="sig-modal-img" class="sig-modal-img" src="" alt="Signature">
+    <button class="btn btn-ghost" onclick="document.getElementById('sig-modal').classList.remove('open')" style="margin-top:14px">Close</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+const TUTOR_PIN = '1234';
+let attendance = [];
+let equipment  = [];
+let masterLog  = JSON.parse(localStorage.getItem('fca_master_log') || '[]');
+let logoDataURL = null;
+let cfg = {
+  title: 'Digital Skills Training',
+  location: '',
+  facilitator: '',
+  session: ''
+};
+
+/* ════════════════════════════════
+   CLOCK & DATE
+════════════════════════════════ */
+function tick() {
+  const d = new Date();
+  document.getElementById('live-clock').textContent =
+    String(d.getHours()).padStart(2,'0')+':'+
+    String(d.getMinutes()).padStart(2,'0')+':'+
+    String(d.getSeconds()).padStart(2,'0');
+}
+tick(); setInterval(tick, 1000);
+document.getElementById('session-date').textContent =
+  new Date().toLocaleDateString('en-KE', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+
+function nowTime() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function todayDate() {
+  return new Date().toLocaleDateString('en-KE', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+/* ════════════════════════════════
+   FLASH ALERT
+════════════════════════════════ */
+function flash(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
+  el.className = 'alert ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = 'alert'; }, 5000);
+}
+
+/* ════════════════════════════════
+   NAV
+════════════════════════════════ */
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'dashboard') refreshDashboard();
+}
+
+/* ════════════════════════════════
+   SIGNATURE PAD
+════════════════════════════════ */
+const canvas = document.getElementById('sig-canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let hasSig = false;
+let penColor = '#111827';
+let lastX = 0, lastY = 0;
+
+function resizeCanvas() {
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return;
+  const imgData = hasSig ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+  canvas.width = rect.width * ratio;
+  canvas.height = 160 * ratio;
+  ctx.scale(ratio, ratio);
+  ctx.strokeStyle = penColor;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (imgData) ctx.putImageData(imgData, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 100);
+
+function getPos(e, c) {
+  const rect = c.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  if (e.touches) {
+    return { x: (e.touches[0].clientX - rect.left), y: (e.touches[0].clientY - rect.top) };
+  }
+  return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
+}
+
+canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e, canvas); lastX = p.x; lastY = p.y; });
+canvas.addEventListener('mousemove', e => {
+  if (!drawing) return;
+  const p = getPos(e, canvas);
+  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = penColor; ctx.lineWidth = 2.2; ctx.stroke();
+  lastX = p.x; lastY = p.y;
+  setSigSigned(true);
+});
+canvas.addEventListener('mouseup', () => { drawing = false; });
+canvas.addEventListener('mouseleave', () => { drawing = false; });
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault(); drawing = true;
+  const p = getPos(e, canvas); lastX = p.x; lastY = p.y;
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!drawing) return;
+  const p = getPos(e, canvas);
+  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = penColor; ctx.lineWidth = 2.2; ctx.stroke();
+  lastX = p.x; lastY = p.y;
+  setSigSigned(true);
+}, { passive: false });
+canvas.addEventListener('touchend', () => { drawing = false; });
+
+function setSigSigned(val) {
+  hasSig = val;
+  const dot = document.getElementById('sig-dot');
+  const txt = document.getElementById('sig-status-text');
+  const ph  = document.getElementById('sig-placeholder');
+  if (val) {
+    dot.classList.add('signed');
+    txt.textContent = 'Signature captured ✓';
+    ph.classList.add('hidden');
+  } else {
+    dot.classList.remove('signed');
+    txt.textContent = 'No signature yet';
+    ph.classList.remove('hidden');
+  }
+}
+
+function clearSig() {
+  const ratio = window.devicePixelRatio || 1;
+  ctx.clearRect(0, 0, canvas.width / ratio * ratio, canvas.height / ratio * ratio);
+  setSigSigned(false);
+}
+
+function setPenColor(el) {
+  penColor = el.dataset.color;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  ctx.strokeStyle = penColor;
+}
+
+function getSigDataURL() {
+  return hasSig ? canvas.toDataURL('image/png') : null;
+}
+
+/* ════════════════════════════════
+   REGISTER / ATTENDANCE
+════════════════════════════════ */
+function registerParticipant() {
+  const name     = document.getElementById('att-name').value.trim();
+  const id       = document.getElementById('att-id').value.trim();
+  const phone    = document.getElementById('att-phone').value.trim();
+  const email    = document.getElementById('att-email').value.trim();
+  const org      = document.getElementById('att-org').value.trim();
+  const county   = document.getElementById('att-county').value.trim();
+
+  if (!name || !id || !phone) {
+    flash('att-alert', 'Please fill in your name, ID, and phone number.', 'error'); return;
+  }
+  if (attendance.find(r => r.id.toLowerCase() === id.toLowerCase())) {
+    flash('att-alert', 'This ID has already been registered today.', 'error'); return;
+  }
+  if (!hasSig) {
+    flash('att-alert', 'Please sign in the signature box before registering.', 'error'); return;
+  }
+
+  const sigImg = getSigDataURL();
+  attendance.push({ name, id, phone, email, org, county, timeIn: nowTime(), timeOut: '', status: 'present', sig: sigImg, date: todayDate() });
+
+  ['att-name','att-id','att-phone','att-email','att-org','att-county'].forEach(i => document.getElementById(i).value = '');
+  clearSig();
+
+  flash('att-alert', name + ' registered at ' + nowTime() + '. Welcome!', 'success');
+  renderAttendance();
+}
+
+function signOut() {
+  const id = document.getElementById('so-id').value.trim();
+  const rec = attendance.find(r => r.id.toLowerCase() === id.toLowerCase());
+  if (!rec) { flash('so-alert', 'ID not found. Did you register first?', 'error'); return; }
+  if (rec.status === 'signed-out') { flash('so-alert', 'You have already signed out.', 'error'); return; }
+  rec.timeOut = nowTime(); rec.status = 'signed-out';
+  document.getElementById('so-id').value = '';
+  flash('so-alert', rec.name + ' signed out at ' + rec.timeOut + '. Thank you!', 'success');
+  renderAttendance();
+}
+
+function renderAttendance() {
+  const present = attendance.filter(r => r.status === 'present').length;
+  document.getElementById('att-count').textContent = '(' + attendance.length + ' registered, ' + present + ' in)';
+  const el = document.getElementById('att-list');
+  if (!attendance.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div>No registrations yet.</div>'; return;
+  }
+  el.innerHTML = attendance.map((r, i) => `
+    <div class="record-item">
+      <div class="record-head">
+        <span class="record-name">${r.name}</span>
+        <span class="badge ${r.status==='present'?'b-present':'b-out-att'}">${r.status==='present'?'In session':'Signed out'}</span>
+      </div>
+      <div class="record-meta">
+        <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+        <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>
+        <div class="record-kv"><span class="rk">Phone</span><span class="rv">${r.phone}</span></div>
+        <div class="record-kv"><span class="rk">County</span><span class="rv">${r.county||'—'}</span></div>
+      </div>
+      ${r.sig ? `<div class="sig-preview-wrap"><img class="sig-preview-thumb" src="${r.sig}" alt="sig"></div>` : ''}
+    </div>`).join('');
+}
+
+/* ════════════════════════════════
+   EQUIPMENT
+════════════════════════════════ */
+function onTypeChange() {
+  const t = document.getElementById('eq-type').value;
+  document.getElementById('mouse-field').style.display = t === 'Victus' ? 'flex' : 'none';
+}
+function takeEquip() {
+  const name  = document.getElementById('eq-name').value.trim();
+  const id    = document.getElementById('eq-id').value.trim();
+  const type  = document.getElementById('eq-type').value;
+  const num   = document.getElementById('eq-num').value.trim();
+  const mouse = type === 'Victus' ? document.getElementById('eq-mouse').value : 'N/A';
+  if (!name || !id || !type || !num) { flash('eq-alert','Fill in all fields and choose a laptop type.','error'); return; }
+  if (equipment.find(r => r.num.toLowerCase() === num.toLowerCase() && r.status === 'out')) {
+    flash('eq-alert','Laptop ' + num + ' is already signed out.','error'); return;
+  }
+  equipment.push({ name, id, type, num, mouse, timeOut: nowTime(), timeIn: '', status: 'out', date: todayDate() });
+  ['eq-name','eq-id','eq-num'].forEach(i => document.getElementById(i).value='');
+  document.getElementById('eq-type').value = '';
+  document.getElementById('mouse-field').style.display = 'none';
+  flash('eq-alert','Laptop ' + num + ' logged to ' + name + '.','success');
+  renderEquipment();
+}
+function returnEquip() {
+  const num = document.getElementById('ret-num').value.trim();
+  const rec = equipment.find(r => r.num.toLowerCase() === num.toLowerCase() && r.status === 'out');
+  if (!rec) { flash('ret-alert','Laptop ' + num + ' not found or already returned.','error'); return; }
+  rec.timeIn = nowTime(); rec.status = 'returned';
+  document.getElementById('ret-num').value = '';
+  flash('ret-alert','Laptop ' + rec.num + ' returned at ' + rec.timeIn + '. Thank you!','success');
+  renderEquipment();
+}
+function renderEquipment() {
+  const out = equipment.filter(r => r.status === 'out').length;
+  document.getElementById('eq-count').textContent = '(' + out + ' out, ' + equipment.length + ' total)';
+  const el = document.getElementById('eq-list');
+  if (!equipment.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">💻</div>No equipment logged yet.</div>'; return; }
+  el.innerHTML = equipment.map((r, i) => `
+    <div class="record-item">
+      <div class="record-head">
+        <span class="record-name">${r.name} — <span style="font-family:var(--mono);font-size:13px">${r.num}</span></span>
+        <span class="badge ${r.status==='out'?'b-eq-out':'b-eq-in'}">${r.status==='out'?'Out':'Returned'}</span>
+      </div>
+      <div class="record-meta">
+        <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+        <div class="record-kv"><span class="rk">Type</span><span class="rv">${r.type}</span></div>
+        <div class="record-kv"><span class="rk">Mouse</span><span class="rv">${r.mouse}</span></div>
+        <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut}</span></div>
+        ${r.timeIn ? `<div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════
+   LOGO UPLOAD
+════════════════════════════════ */
+function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    logoDataURL = ev.target.result;
+    document.getElementById('logo-preview-img').src = logoDataURL;
+    document.getElementById('logo-upload-placeholder').style.display = 'none';
+    document.getElementById('logo-preview-area').style.display = 'flex';
+    // Update header logo
+    const hdrImg = document.getElementById('hdr-logo-img');
+    hdrImg.src = logoDataURL;
+    hdrImg.style.display = 'block';
+    document.getElementById('hdr-logo-fallback').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+function saveCfg() {
+  cfg.title = document.getElementById('cfg-title').value.trim() || 'Digital Skills Training';
+  cfg.location = document.getElementById('cfg-location').value.trim();
+  cfg.facilitator = document.getElementById('cfg-facilitator').value.trim();
+  cfg.session = document.getElementById('cfg-session').value.trim();
+  flash('cfg-alert','Settings saved. They will appear in all Excel exports.','success');
+}
+
+/* ════════════════════════════════
+   ADMIN PIN
+════════════════════════════════ */
+function checkPin() {
+  if (document.getElementById('pin-input').value === TUTOR_PIN) {
+    document.getElementById('tutor-gate').style.display = 'none';
+    document.getElementById('tutor-content').style.display = 'block';
+    refreshDashboard();
+  } else {
+    flash('pin-alert','Incorrect PIN. Try again.','error');
+    document.getElementById('pin-input').value = '';
+  }
+}
+document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+function lockDashboard() {
+  document.getElementById('tutor-gate').style.display = '';
+  document.getElementById('tutor-content').style.display = 'none';
+  document.getElementById('pin-input').value = '';
+}
+
+/* ════════════════════════════════
+   DASHBOARD RENDER
+════════════════════════════════ */
+function refreshDashboard() {
+  document.getElementById('dash-total').textContent   = attendance.length;
+  document.getElementById('dash-present').textContent = attendance.filter(r => r.status==='present').length;
+  document.getElementById('dash-left').textContent    = attendance.filter(r => r.status==='signed-out').length;
+  document.getElementById('dash-laptops').textContent = equipment.filter(r => r.status==='out').length;
+
+  document.getElementById('dash-att-count').textContent = '(' + attendance.length + ')';
+  const attEl = document.getElementById('dash-att-list');
+  if (!attendance.length) {
+    attEl.innerHTML='<div class="empty-state"><div class="empty-icon">📝</div>No registrations yet.</div>';
+  } else {
+    attEl.innerHTML = attendance.map((r, i) => `
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name}</span>
+          <span class="badge ${r.status==='present'?'b-present':'b-out-att'}">${r.status==='present'?'Present':'Signed out'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Phone</span><span class="rv">${r.phone}</span></div>
+          <div class="record-kv"><span class="rk">Email</span><span class="rv">${r.email||'—'}</span></div>
+          <div class="record-kv"><span class="rk">Organisation</span><span class="rv">${r.org||'—'}</span></div>
+          <div class="record-kv"><span class="rk">County</span><span class="rv">${r.county||'—'}</span></div>
+          <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut||'—'}</span></div>
+        </div>
+        ${r.sig ? `<div class="sig-preview-wrap"><img class="sig-preview-thumb" src="${r.sig}" alt="signature" style="cursor:pointer" onclick="viewSig(${i})"></div>` : '<div style="font-size:12px;color:var(--muted);margin-top:4px;">No signature</div>'}
+        <div class="record-actions" style="margin-top:10px">
+          <button class="btn-sm btn-sm-edit" onclick="openEditAtt(${i})">Edit</button>
+          <button class="btn-sm btn-sm-del"  onclick="removeAtt(${i})">Remove</button>
+          ${r.sig ? `<button class="btn-sm btn-sm-view" onclick="viewSig(${i})">View signature</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('dash-eq-count').textContent = '(' + equipment.length + ')';
+  const eqEl = document.getElementById('dash-eq-list');
+  if (!equipment.length) {
+    eqEl.innerHTML='<div class="empty-state"><div class="empty-icon">💻</div>No equipment records yet.</div>';
+  } else {
+    eqEl.innerHTML = equipment.map((r, i) => `
+      <div class="record-item">
+        <div class="record-head">
+          <span class="record-name">${r.name} — ${r.num}</span>
+          <span class="badge ${r.status==='out'?'b-eq-out':'b-eq-in'}">${r.status==='out'?'Out':'Returned'}</span>
+        </div>
+        <div class="record-meta">
+          <div class="record-kv"><span class="rk">ID</span><span class="rv">${r.id}</span></div>
+          <div class="record-kv"><span class="rk">Type</span><span class="rv">${r.type} ${r.num}</span></div>
+          <div class="record-kv"><span class="rk">Mouse</span><span class="rv">${r.mouse}</span></div>
+          <div class="record-kv"><span class="rk">Time out</span><span class="rv">${r.timeOut}</span></div>
+          <div class="record-kv"><span class="rk">Time in</span><span class="rv">${r.timeIn||'—'}</span></div>
+        </div>
+        <div class="record-actions" style="margin-top:10px">
+          <button class="btn-sm btn-sm-edit" onclick="openEditEq(${i})">Edit</button>
+          <button class="btn-sm btn-sm-del"  onclick="removeEq(${i})">Remove</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+/* ════════════════════════════════
+   VIEW SIGNATURE MODAL
+════════════════════════════════ */
+function viewSig(i) {
+  const r = attendance[i];
+  document.getElementById('sig-modal-name').textContent = r.name + ' — ' + r.date;
+  document.getElementById('sig-modal-img').src = r.sig;
+  document.getElementById('sig-modal').classList.add('open');
+}
+
+/* ════════════════════════════════
+   EDIT MODALS
+════════════════════════════════ */
+function openModal(title, bodyHTML, saveFn) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-save-btn').onclick = saveFn;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+document.getElementById('edit-modal').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+document.getElementById('sig-modal').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
+
+function openEditAtt(i) {
+  const r = attendance[i];
+  openModal('Edit participant record', `
+    <div class="field"><label>Full name</label><input id="m-name" value="${r.name}"></div>
+    <div class="two-col">
+      <div class="field"><label>ID</label><input id="m-id" value="${r.id}"></div>
+      <div class="field"><label>Phone</label><input id="m-phone" value="${r.phone}"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="m-email" value="${r.email||''}"></div>
+    <div class="two-col">
+      <div class="field"><label>Organisation</label><input id="m-org" value="${r.org||''}"></div>
+      <div class="field"><label>County</label><input id="m-county" value="${r.county||''}"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Time in</label><input id="m-tin" value="${r.timeIn}" placeholder="HH:MM"></div>
+      <div class="field"><label>Time out</label><input id="m-tout" value="${r.timeOut}" placeholder="Leave blank if still in"></div>
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="m-status">
+        <option value="present" ${r.status==='present'?'selected':''}>Present</option>
+        <option value="signed-out" ${r.status==='signed-out'?'selected':''}>Signed out</option>
+      </select>
+    </div>`, () => {
+      attendance[i] = { ...r,
+        name:    document.getElementById('m-name').value.trim()||r.name,
+        id:      document.getElementById('m-id').value.trim()||r.id,
+        phone:   document.getElementById('m-phone').value.trim()||r.phone,
+        email:   document.getElementById('m-email').value.trim(),
+        org:     document.getElementById('m-org').value.trim(),
+        county:  document.getElementById('m-county').value.trim(),
+        timeIn:  document.getElementById('m-tin').value.trim()||r.timeIn,
+        timeOut: document.getElementById('m-tout').value.trim(),
+        status:  document.getElementById('m-status').value,
+      };
+      closeModal(); renderAttendance(); refreshDashboard();
+    });
+}
+function removeAtt(i) {
+  if (!confirm('Remove ' + attendance[i].name + '? This cannot be undone.')) return;
+  attendance.splice(i, 1); renderAttendance(); refreshDashboard();
+}
+function openEditEq(i) {
+  const r = equipment[i];
+  openModal('Edit equipment record', `
+    <div class="field"><label>Name</label><input id="m-name" value="${r.name}"></div>
+    <div class="two-col">
+      <div class="field"><label>ID</label><input id="m-id" value="${r.id}"></div>
+      <div class="field"><label>Laptop number</label><input id="m-num" value="${r.num}"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Type</label>
+        <select id="m-type">
+          <option value="Victus" ${r.type==='Victus'?'selected':''}>HP Victus</option>
+          <option value="Dell"   ${r.type==='Dell'  ?'selected':''}>Dell</option>
+          <option value="Other"  ${r.type==='Other' ?'selected':''}>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Mouse</label>
+        <select id="m-mouse">
+          <option value="Yes" ${r.mouse==='Yes'?'selected':''}>Yes</option>
+          <option value="No"  ${r.mouse==='No' ?'selected':''}>No</option>
+          <option value="N/A" ${r.mouse==='N/A'?'selected':''}>N/A</option>
+        </select>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Time out</label><input id="m-tout" value="${r.timeOut}"></div>
+      <div class="field"><label>Time in</label><input id="m-tin" value="${r.timeIn}" placeholder="Blank if still out"></div>
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="m-status">
+        <option value="out"      ${r.status==='out'     ?'selected':''}>Out</option>
+        <option value="returned" ${r.status==='returned'?'selected':''}>Returned</option>
+      </select>
+    </div>`, () => {
+      equipment[i] = { ...r,
+        name:   document.getElementById('m-name').value.trim()||r.name,
+        id:     document.getElementById('m-id').value.trim()||r.id,
+        num:    document.getElementById('m-num').value.trim()||r.num,
+        type:   document.getElementById('m-type').value,
+        mouse:  document.getElementById('m-mouse').value,
+        timeOut:document.getElementById('m-tout').value.trim()||r.timeOut,
+        timeIn: document.getElementById('m-tin').value.trim(),
+        status: document.getElementById('m-status').value,
+      };
+      closeModal(); renderEquipment(); refreshDashboard();
+    });
+}
+function removeEq(i) {
+  if (!confirm('Remove laptop ' + equipment[i].num + ' record? This cannot be undone.')) return;
+  equipment.splice(i, 1); renderEquipment(); refreshDashboard();
+}
+
+/* ════════════════════════════════
+   EXCEL EXPORT HELPERS
+════════════════════════════════ */
+function getHeaderInfo() {
+  return [
+    ['Finland Church Aid (FCA) – ' + (cfg.title || 'Digital Skills Training')],
+    ['Date: ' + todayDate() + (cfg.location ? '   |   Location: ' + cfg.location : '') + (cfg.session ? '   |   ' + cfg.session : '')],
+    [cfg.facilitator ? 'Facilitator: ' + cfg.facilitator : ''],
+    []
+  ];
+}
+
+function styleHeader(ws, colCount) {
+  const XLSX = window.XLSX;
+  // Title row
+  ws['A1'] = { v: 'Finland Church Aid (FCA) – ' + (cfg.title || 'Digital Skills Training'), t: 's' };
+  ws['A2'] = { v: 'Date: ' + todayDate() + (cfg.location ? '   |   Location: ' + cfg.location : '') + (cfg.session ? '   |   ' + cfg.session : ''), t: 's' };
+  if (cfg.facilitator) ws['A3'] = { v: 'Facilitator: ' + cfg.facilitator, t: 's' };
+
+  // Merge header rows across all columns
+  const merges = ws['!merges'] || [];
+  merges.push({ s:{r:0,c:0}, e:{r:0,c:colCount-1} });
+  merges.push({ s:{r:1,c:0}, e:{r:1,c:colCount-1} });
+  if (cfg.facilitator) merges.push({ s:{r:2,c:0}, e:{r:2,c:colCount-1} });
+  ws['!merges'] = merges;
+}
+
+/* ════════════════════════════════
+   EXPORT: ATTENDANCE XLSX
+════════════════════════════════ */
+function exportAttendanceXLSX() {
+  if (!attendance.length) { flash('export-alert','No attendance records to export yet.','error'); return; }
+
+  const XLSX = window.XLSX;
+  const wb = XLSX.utils.book_new();
+
+  // Build data rows (header block + column headers + data)
+  const headerRows = getHeaderInfo();
+  const colHeaders = ['#','Full Name','Participant ID','Phone','Email','Organisation','County','Time In','Time Out','Status','Signature'];
+  const dataRows = attendance.map((r, i) => [
+    i+1, r.name, r.id, r.phone, r.email||'', r.org||'', r.county||'',
+    r.timeIn, r.timeOut||'', r.status==='present'?'Present':'Signed Out',
+    r.sig ? '[See embedded image]' : 'No signature'
+  ]);
+
+  const allRows = [...headerRows, colHeaders, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:4}, {wch:25}, {wch:18}, {wch:16}, {wch:28}, {wch:22}, {wch:16},
+    {wch:10}, {wch:10}, {wch:14}, {wch:30}
+  ];
+
+  // Row heights — extra height for signature rows
+  const headerOffset = headerRows.length + 1; // +1 for col headers row
+  ws['!rows'] = [
+    {hpt:28}, {hpt:18}, {hpt:18}, {hpt:6}, {hpt:20}
+  ];
+  attendance.forEach((rec, i) => {
+    ws['!rows'][headerOffset + i] = { hpt: rec.sig ? 60 : 20 };
+  });
+
+  styleHeader(ws, colHeaders.length);
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'FCA_Attendance_' + date + '.xlsx');
+  flash('export-alert','Attendance Excel exported successfully!','success');
+
+  // Save to master log
+  saveMasterRecord();
+}
+
+/* ════════════════════════════════
+   EXPORT: EQUIPMENT XLSX
+════════════════════════════════ */
+function exportEquipmentXLSX() {
+  if (!equipment.length) { flash('export-alert','No equipment records to export yet.','error'); return; }
+
+  const XLSX = window.XLSX;
+  const wb = XLSX.utils.book_new();
+
+  const headerRows = getHeaderInfo();
+  const colHeaders = ['#','Name','Participant ID','Laptop Type','Laptop No.','Mouse Taken','Time Out','Time In','Status'];
+  const dataRows = equipment.map((r, i) => [
+    i+1, r.name, r.id, r.type, r.num, r.mouse, r.timeOut, r.timeIn||'', r.status==='out'?'Out':'Returned'
+  ]);
+
+  const allRows = [...headerRows, colHeaders, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+  ws['!cols'] = [
+    {wch:4},{wch:24},{wch:18},{wch:14},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10}
+  ];
+
+  styleHeader(ws, colHeaders.length);
+  XLSX.utils.book_append_sheet(wb, ws, 'Equipment');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'FCA_Equipment_' + date + '.xlsx');
+  flash('export-alert','Equipment Excel exported successfully!','success');
+}
+
+/* ════════════════════════════════
+   EXPORT: COMBINED WORKBOOK
+════════════════════════════════ */
+function exportCombinedXLSX() {
+  if (!attendance.length && !equipment.length) {
+    flash('export-alert','No records to export yet.','error'); return;
+  }
+
+  const XLSX = window.XLSX;
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1 — Attendance
+  const hRows = getHeaderInfo();
+  const attHeaders = ['#','Full Name','Participant ID','Phone','Email','Organisation','County','Time In','Time Out','Status'];
+  const attData = attendance.map((r,i) => [i+1,r.name,r.id,r.phone,r.email||'',r.org||'',r.county||'',r.timeIn,r.timeOut||'',r.status==='present'?'Present':'Signed Out']);
+  const wsAtt = XLSX.utils.aoa_to_sheet([...hRows, attHeaders, ...attData]);
+  wsAtt['!cols'] = [{wch:4},{wch:25},{wch:18},{wch:16},{wch:28},{wch:22},{wch:16},{wch:10},{wch:10},{wch:14}];
+  styleHeader(wsAtt, attHeaders.length);
+  XLSX.utils.book_append_sheet(wb, wsAtt, 'Attendance');
+
+  // Sheet 2 — Equipment
+  const eqHeaders = ['#','Name','Participant ID','Laptop Type','Laptop No.','Mouse Taken','Time Out','Time In','Status'];
+  const eqData = equipment.map((r,i) => [i+1,r.name,r.id,r.type,r.num,r.mouse,r.timeOut,r.timeIn||'',r.status==='out'?'Out':'Returned']);
+  const wsEq = XLSX.utils.aoa_to_sheet([...hRows, eqHeaders, ...eqData]);
+  wsEq['!cols'] = [{wch:4},{wch:24},{wch:18},{wch:14},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10}];
+  styleHeader(wsEq, eqHeaders.length);
+  XLSX.utils.book_append_sheet(wb, wsEq, 'Equipment');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'FCA_Combined_' + date + '.xlsx');
+  flash('export-alert','Combined workbook exported! (Attendance + Equipment sheets)','success');
+
+  saveMasterRecord();
+}
+
+/* ════════════════════════════════
+   MASTER REGISTER (ACCUMULATES SESSIONS)
+════════════════════════════════ */
+function saveMasterRecord() {
+  const sessionRecord = {
+    date: todayDate(),
+    session: cfg.session || todayDate(),
+    title: cfg.title,
+    location: cfg.location,
+    facilitator: cfg.facilitator,
+    attendance: attendance.map(r => ({ ...r, sig: undefined })), // strip sig blobs for storage
+    equipment: [...equipment]
+  };
+  // Remove existing entry for this date/session to avoid duplicates
+  masterLog = masterLog.filter(s => !(s.date === sessionRecord.date && s.session === sessionRecord.session));
+  masterLog.push(sessionRecord);
+  try { localStorage.setItem('fca_master_log', JSON.stringify(masterLog)); } catch(e) {}
+}
+
+function exportMasterXLSX() {
+  saveMasterRecord(); // include current session
+
+  if (!masterLog.length) {
+    flash('export-alert','No session data saved yet. Export attendance or combined first.','error'); return;
+  }
+
+  const XLSX = window.XLSX;
+  const wb = XLSX.utils.book_new();
+
+  // Build all-sessions attendance sheet
+  const attHeaders = ['Session / Date','Facilitator','Location','#','Full Name','Participant ID','Phone','Email','Organisation','County','Time In','Time Out','Status'];
+  const allAttRows = [
+    ['FINLAND CHURCH AID (FCA) – MASTER TRAINING REGISTER'],
+    ['Generated: ' + todayDate()],
+    [],
+    attHeaders
+  ];
+  masterLog.forEach(s => {
+    s.attendance.forEach((r, i) => {
+      allAttRows.push([
+        s.session || s.date, s.facilitator||'', s.location||'',
+        i+1, r.name, r.id, r.phone, r.email||'', r.org||'', r.county||'',
+        r.timeIn, r.timeOut||'', r.status==='present'?'Present':'Signed Out'
+      ]);
+    });
+    // blank separator between sessions
+    allAttRows.push([]);
+  });
+
+  const wsAll = XLSX.utils.aoa_to_sheet(allAttRows);
+  wsAll['!cols'] = [
+    {wch:20},{wch:18},{wch:18},{wch:4},{wch:22},{wch:16},{wch:14},{wch:24},{wch:20},{wch:14},{wch:10},{wch:10},{wch:14}
+  ];
+  const masterMerges = [
+    { s:{r:0,c:0}, e:{r:0,c:12} },
+    { s:{r:1,c:0}, e:{r:1,c:12} }
+  ];
+  wsAll['!merges'] = masterMerges;
+  XLSX.utils.book_append_sheet(wb, wsAll, 'All Sessions');
+
+  // Summary sheet — one row per session
+  const summaryHeaders = ['Session','Date','Facilitator','Location','Total Registered','Laptops Logged'];
+  const summaryRows = [
+    ['FCA TRAINING SESSIONS SUMMARY'],
+    [],
+    summaryHeaders,
+    ...masterLog.map(s => [
+      s.session||s.date, s.date, s.facilitator||'', s.location||'',
+      s.attendance.length, s.equipment.length
+    ])
+  ];
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+  wsSummary['!cols'] = [{wch:22},{wch:14},{wch:18},{wch:18},{wch:18},{wch:16}];
+  wsSummary['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:5} }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'FCA_Master_Register_' + date + '.xlsx');
+  flash('export-alert','Master register exported! Contains all ' + masterLog.length + ' session(s).','success');
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+// Restore config from localStorage
+const savedCfg = localStorage.getItem('fca_cfg');
+if (savedCfg) {
+  try {
+    cfg = { ...cfg, ...JSON.parse(savedCfg) };
+    document.getElementById('cfg-title').value = cfg.title;
+    document.getElementById('cfg-location').value = cfg.location;
+    document.getElementById('cfg-facilitator').value = cfg.facilitator;
+    document.getElementById('cfg-session').value = cfg.session;
+  } catch(e) {}
+}
+
+// Auto-save cfg on change
+['cfg-title','cfg-location','cfg-facilitator','cfg-session'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    cfg.title = document.getElementById('cfg-title').value.trim() || 'Digital Skills Training';
+    cfg.location = document.getElementById('cfg-location').value.trim();
+    cfg.facilitator = document.getElementById('cfg-facilitator').value.trim();
+    cfg.session = document.getElementById('cfg-session').value.trim();
+    try { localStorage.setItem('fca_cfg', JSON.stringify(cfg)); } catch(e) {}
+  });
+});
+</script>
+</body>
+</html>
